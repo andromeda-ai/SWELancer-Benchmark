@@ -126,7 +126,7 @@ class ContainerResources(BaseModel):
     """
 
     # number of cpus (default)
-    cpu: float = 0.2
+    cpu: float = 1
     # amount of memory in MB
     memory: int = 1024
 
