@@ -362,6 +362,7 @@ Please note that the Python code is not a Jupyter notebook; you must write a ful
                 langfuse.score(
                      name="Task Grade",
                      value=grade.score,
+                     data_type="BOOLEAN",
                      comment=grade.grader_log,
                      trace_id=trace.id
                 )
@@ -378,6 +379,7 @@ Please note that the Python code is not a Jupyter notebook; you must write a ful
             langfuse.score(
                 name="Task Grade",
                 value=0,
+                data_type="BOOLEAN",
                 comment=f"Grading failed with error: {str(e)}",
                 trace_id=trace.id
             )
