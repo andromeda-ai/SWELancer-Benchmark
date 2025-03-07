@@ -70,6 +70,7 @@ EOF
   
   # Build the Docker image using standard docker build
   docker build \
+    --add-host=host.docker.internal:host-gateway \
     -f Dockerfile.tmp.$ISSUE_ID \
     -t alourenco/swelancer:issue-$ISSUE_ID . || return 1
   
