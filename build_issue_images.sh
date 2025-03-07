@@ -13,10 +13,31 @@ build_image() {
   ISSUE_ID=$1
   BASE_IMG=$2
   
-  # Check if the image already exists on Docker Hub
+  # Get current architecture
+  CURRENT_ARCH=$(uname -m)
+  case "$CURRENT_ARCH" in
+    x86_64)
+      DOCKER_ARCH="amd64"
+      ;;
+    aarch64|arm64)
+      DOCKER_ARCH="arm64"
+      ;;
+    *)
+      DOCKER_ARCH="$CURRENT_ARCH"
+      ;;
+  esac
+  
+  # Check if the image already exists on Docker Hub for the current architecture
   if docker manifest inspect alourenco/swelancer:issue-$ISSUE_ID > /dev/null 2>&1; then
-    echo "Image for ISSUE_ID: $ISSUE_ID already exists, skipping..."
-    return 0
+    # Check if the manifest contains the current architecture
+    if docker manifest inspect alourenco/swelancer:issue-$ISSUE_ID | grep -q "\"architecture\":\"$DOCKER_ARCH\""; then
+      echo "Image for ISSUE_ID: $ISSUE_ID already exists for $DOCKER_ARCH architecture, skipping..."
+      return 0
+    else
+      echo "Image for ISSUE_ID: $ISSUE_ID exists but not for $DOCKER_ARCH architecture, building..."
+    fi
+  else
+    echo "Image for ISSUE_ID: $ISSUE_ID does not exist, building..."
   fi
   
   echo "Building image for ISSUE_ID: $ISSUE_ID"
