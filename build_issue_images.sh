@@ -6,41 +6,37 @@ BASE_IMAGE="alourenco/swelancer:latest"
 # Automatically acknowledge GNU Parallel citation
 yes "will cite" | parallel --citation > /dev/null 2>&1 || true
 
-echo "Starting to build images for issues 1-237..."
+# Get current architecture
+CURRENT_ARCH=$(uname -m)
+case "$CURRENT_ARCH" in
+  x86_64)
+    DOCKER_ARCH="amd64"
+    ;;
+  aarch64|arm64)
+    DOCKER_ARCH="arm64"
+    ;;
+  *)
+    DOCKER_ARCH="$CURRENT_ARCH"
+    ;;
+esac
+
+echo "Starting to build images for issues 1-237 for $DOCKER_ARCH architecture..."
 
 # Function to build a single image
 build_image() {
   ISSUE_ID=$1
   BASE_IMG=$2
   
-  # Get current architecture
-  CURRENT_ARCH=$(uname -m)
-  case "$CURRENT_ARCH" in
-    x86_64)
-      DOCKER_ARCH="amd64"
-      ;;
-    aarch64|arm64)
-      DOCKER_ARCH="arm64"
-      ;;
-    *)
-      DOCKER_ARCH="$CURRENT_ARCH"
-      ;;
-  esac
+  # Use architecture-specific tag
+  ARCH_TAG="alourenco/swelancer:issue-$ISSUE_ID-$DOCKER_ARCH"
   
-  # Check if the image already exists on Docker Hub for the current architecture
-  if docker manifest inspect alourenco/swelancer:issue-$ISSUE_ID > /dev/null 2>&1; then
-    # Check if the manifest contains the current architecture
-    if docker manifest inspect alourenco/swelancer:issue-$ISSUE_ID | grep -q "\"architecture\":\"$DOCKER_ARCH\""; then
-      echo "Image for ISSUE_ID: $ISSUE_ID already exists for $DOCKER_ARCH architecture, skipping..."
-      return 0
-    else
-      echo "Image for ISSUE_ID: $ISSUE_ID exists but not for $DOCKER_ARCH architecture, building..."
-    fi
-  else
-    echo "Image for ISSUE_ID: $ISSUE_ID does not exist, building..."
+  # Check if the architecture-specific image already exists
+  if docker manifest inspect $ARCH_TAG > /dev/null 2>&1; then
+    echo "Image $ARCH_TAG already exists, skipping..."
+    return 0
   fi
   
-  echo "Building image for ISSUE_ID: $ISSUE_ID"
+  echo "Building image for ISSUE_ID: $ISSUE_ID for $DOCKER_ARCH architecture"
   
   # Create a temporary Dockerfile in the current directory
   cat > Dockerfile.tmp.$ISSUE_ID << EOF
@@ -66,17 +62,19 @@ RUN cd /app && \\
 
 # Label the image with issue information
 LABEL issue_id="$ISSUE_ID"
+LABEL architecture="$DOCKER_ARCH"
 EOF
   
-  # Build the Docker image using standard docker build
+  # Build the Docker image using standard docker build with platform flag
   docker build \
+    --platform linux/$DOCKER_ARCH \
     --add-host=host.docker.internal:host-gateway \
     -f Dockerfile.tmp.$ISSUE_ID \
-    -t alourenco/swelancer:issue-$ISSUE_ID . || return 1
+    -t $ARCH_TAG . || return 1
   
-  # Push the image to Docker Hub and check if successful
-  if ! docker push alourenco/swelancer:issue-$ISSUE_ID; then
-    echo "Failed to push image for ISSUE_ID: $ISSUE_ID"
+  # Push the architecture-specific image
+  if ! docker push $ARCH_TAG; then
+    echo "Failed to push image $ARCH_TAG"
     return 1
   fi
   
@@ -84,17 +82,18 @@ EOF
   rm Dockerfile.tmp.$ISSUE_ID
   
   # Remove the local image to save disk space
-  docker rmi alourenco/swelancer:issue-$ISSUE_ID
+  docker rmi $ARCH_TAG
   
-  echo "Successfully built and pushed image alourenco/swelancer:issue-$ISSUE_ID"
+  echo "Successfully built and pushed image $ARCH_TAG"
   return 0
 }
 
 export -f build_image
 export BASE_IMAGE
+export DOCKER_ARCH
 
 # Build images in parallel (adjust -j to control the number of parallel jobs)
 # Use --halt soon,fail=1 to stop if any build fails
 seq 1 237 | parallel --halt soon,fail=1 -j 4 "build_image {} $BASE_IMAGE"
 
-echo "All images built successfully!" 
+echo "All $DOCKER_ARCH architecture images built successfully!" 
