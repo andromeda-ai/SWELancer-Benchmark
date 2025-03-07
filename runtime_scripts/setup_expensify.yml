@@ -35,15 +35,6 @@
       args:
         chdir: /app/expensify/config/webpack/
     
-    - name: Modify /etc/hosts file to include dev.new.expensify.com
-      become: true
-      lineinfile:
-        path: /etc/hosts
-        line: '127.0.0.1 dev.new.expensify.com'
-        state: present
-        backup: no
-        unsafe_writes: yes
-    
     - name: Get the commit ID for the issue
       shell: |
         ISSUE_ID={{ lookup('env', 'ISSUE_ID') }}

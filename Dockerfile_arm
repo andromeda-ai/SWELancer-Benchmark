@@ -1,9 +1,6 @@
 # Use an official Ubuntu as a base image
 FROM ubuntu:22.04
 
-# Set build-time argument for architecture
-ARG TARGETARCH
-
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NVM_DIR=/root/.nvm
@@ -36,16 +33,9 @@ RUN apt-get update && apt-get install -y \
     python3.12-dev \
     --no-install-recommends
 
-# Install conda with architecture-specific miniconda
-RUN if [ "$TARGETARCH" = "amd64" ] || [ "$TARGETARCH" = "x86_64" ]; then \
-        wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh; \
-    elif [ "$TARGETARCH" = "arm64" ] || [ "$TARGETARCH" = "aarch64" ]; then \
-        wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh -O /tmp/miniconda.sh; \
-    else \
-        echo "Unsupported architecture: $TARGETARCH"; \
-        exit 1; \
-    fi && \
-    bash /tmp/miniconda.sh -b -p /opt/conda \
+# Install conda
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh -O /tmp/miniconda.sh \
+    && bash /tmp/miniconda.sh -b -p /opt/conda \
     && rm -f /tmp/miniconda.sh \
     && /opt/conda/bin/conda clean -ya
 ENV PATH="/opt/conda/bin:$PATH"

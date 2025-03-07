@@ -132,6 +132,7 @@ RUN mkdir -p /app/tests
 # Copy files into the /app/tests/ directory
 COPY issues/ /app/tests/issues/
 COPY utils/ /app/tests/utils/
+COPY runtime_scripts/setup_host.yml /app/tests/setup_host.yml
 COPY runtime_scripts/setup_expensify.yml /app/tests/setup_expensify.yml
 COPY runtime_scripts/setup_mitmproxy.yml /app/tests/setup_mitmproxy.yml
 COPY runtime_scripts/run_test.yml /app/tests/run_test.yml

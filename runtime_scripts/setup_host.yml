@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+    - name: Modify /etc/hosts file to include dev.new.expensify.com
+      become: true
+      lineinfile:
+        path: /etc/hosts
+        line: '127.0.0.1 dev.new.expensify.com'
+        state: present
+        backup: no
+        unsafe_writes: yes

@@ -43,7 +43,8 @@ else
     echo "alias user-tool='ansible-playbook -i \"localhost,\" --connection=local /app/tests/run_user_tool.yml'" >> ~/.bashrc
 
     # Run ansible playbooks to setup expensify and mitmproxy
-    ansible-playbook -i "localhost," --connection=local /app/tests/setup_expensify.yml
+    #ansible-playbook -i "localhost," --connection=local /app/tests/setup_expensify.yml
+    ansible-playbook -i "localhost," --connection=local /app/tests/setup_host.yml
     ansible-playbook -i "localhost," --connection=local /app/tests/setup_mitmproxy.yml
 
     # Set an environment variable to indicate that the setup is done
