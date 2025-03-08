@@ -129,7 +129,7 @@
     - name: Set npm registry to use the local npm proxy
       shell: |
         source /root/.nvm/nvm.sh
-        npm set registry http://host.docker.internal:4873/
+        npm set registry http://172.16.0.1:4873/
       args:
         chdir: /app/expensify
         executable: /bin/bash
