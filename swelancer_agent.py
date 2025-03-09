@@ -191,14 +191,17 @@ class SimpleAgentSolver(PythonCodingSolver):
     @override
     async def run(self, task: ComputerTask) -> AsyncGenerator[Step | FinalResult, None]:
         try:
+            # Get the session ID from environment variables
+            session_id = os.environ.get("SWELANCER_SESSION_ID")
+            attempt = os.environ.get("SWELANCER_ATTEMPT")
             # Create a new trace for this task
             trace = langfuse.trace(
-                name=f"SWELancer Task {task.question_id}",
+                name=f"SWELancer Task {task.question_id} Pass@{attempt}",
                 metadata={
                     "model": self.model,
                     "solver": self.name,
                 },
-                session_id="swelancer"
+                session_id=session_id
             )
 
             async with self._start_computer(task) as computer:
@@ -236,6 +239,7 @@ Please note that the Python code is not a Jupyter notebook; you must write a ful
                     while True:
                         try:
                            # Create and end generation span
+                            print(f"Creating generation span with {len(messages)} messages")
                             generation = langfuse.generation(
                                 name="Model Response",
                                 model="deepseek-reasoner",
@@ -249,9 +253,7 @@ Please note that the Python code is not a Jupyter notebook; you must write a ful
 
                             # Get model response and usage info
                             model_response, usage_info = get_model_response(model=self.model, messages=messages)
-                            print(model_response)
-
-                            # Update generation with output and usage info
+         
                             generation.end(
                                 output=model_response,
                                 usage_details={
@@ -261,9 +263,9 @@ Please note that the Python code is not a Jupyter notebook; you must write a ful
                                     "total": usage_info["total_tokens"]
                                 },
                                 cost_details = {
-                                    "input": (0.135 / 1000000) * usage_info["prompt_tokens"],
+                                    "input": (0.55 / 1000000) * usage_info["prompt_tokens"],
                                     "cache_read_input_tokens": 0,
-                                    "output": (0.550 / 1000000) * usage_info["completion_tokens"],
+                                    "output": (2.19 / 1000000) * usage_info["completion_tokens"],
                                     "total": usage_info["cost"]
                                 }
                             )
@@ -384,7 +386,6 @@ Please note that the Python code is not a Jupyter notebook; you must write a ful
                 trace_id=trace.id
             )
 
-            raise
             yield FinalResultSuccessful(
                 grade=Grade(score=0, grader_log=f"Grading failed with error: {str(e)}")
             )

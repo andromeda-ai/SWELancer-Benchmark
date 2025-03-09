@@ -307,13 +307,12 @@ class SWELancerEval(PythonCodingEval):
             "EVAL_VARIANT": "ic_swe",
         }
 
-        docker_image = "swelancer:issue-1"
-
         swelancer_tasks = []
         i = 0 
         for task in tasks.to_dict(orient="records"):
             if self.taskset and task["question_id"] not in self.taskset:
                 continue
+            docker_image = f"alourenco/swelancer:paper-issue-{task['question_id']}"
             # task['all_proposals'] = ast.literal_eval(task['all_proposals'])
             task['prompt'] = ast.literal_eval(task['prompt'])
             task['acceptable_folders'] = ast.literal_eval(task['acceptable_folders'])
